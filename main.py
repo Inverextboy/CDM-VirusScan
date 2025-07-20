@@ -205,5 +205,5 @@ async def on_message(message):
         print(f"❌ Error en on_message: {error}")
 
 # === INICIAR EL BOT ===
-
+print(f"Token leído: {TOKEN[:5]}...")  # No muestres todo por seguridad, solo confirmá que no es None ni vacío
 client.run(TOKEN)
