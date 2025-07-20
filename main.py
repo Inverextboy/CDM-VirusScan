@@ -136,16 +136,16 @@ def extract_urls(text):
 
 @client.event
 async def on_message(message):
-    print(f"📥 Mensaje recibido: {message.content}")
+    print(f"📥 Mensaje recibido: {message.content} de {message.author}")
 
     if message.author == client.user:
         return
 
     alert_channel = client.get_channel(ALERT_CHANNEL_ID)
+    print(f"🔔 Canal de alertas obtenido: {alert_channel}")
     if alert_channel is None:
         print("❌ No se pudo obtener el canal de alertas.")
         return
-
     contenido_malicioso = False
 
     # Analizar URLs
