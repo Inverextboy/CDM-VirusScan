@@ -17,6 +17,9 @@ ALERT_CHANNEL_ID = int(os.getenv("ALERT_CHANNEL_ID"))
 # Configurar el bot
 intents = discord.Intents.default()
 intents.message_content = True
+intents.messages = True
+intents.guilds = True
+intents.members = True  # por si querés mencionarlo o borrar mensajes
 client = discord.Client(intents=intents)
 
 # Servidor Flask para mantener activo en Render
