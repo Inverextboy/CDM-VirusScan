@@ -15,11 +15,7 @@ HYBRID_ANALYSIS_API_KEY = os.getenv("HYBRID_ANALYSIS_API_KEY")
 ALERT_CHANNEL_ID = int(os.getenv("ALERT_CHANNEL_ID"))
 
 # Configurar el bot
-intents = discord.Intents.default()
-intents.message_content = True
-intents.messages = True
-intents.guilds = True
-intents.members = True  # por si querés mencionarlo o borrar mensajes
+intents = discord.Intents.all()  # Cambiado de default() a all()
 client = discord.Client(intents=intents)
 
 # Servidor Flask para mantener activo en Render
@@ -148,7 +144,7 @@ def extract_urls(text):
 
 @client.event
 async def on_message(message):
-    print("✅ on_message ACTIVADO")  # Esto es el bonus para confirmar que el evento está llegando
+    print("✅ on_message ACTIVADO")
     try:
         print(f"📥 Mensaje recibido: {message.content} de {message.author}")
 
@@ -159,6 +155,8 @@ async def on_message(message):
         if alert_channel is None:
             print("❌ No se pudo obtener el canal de alertas.")
             return
+        else:
+            print(f"📢 Canal de alertas encontrado: {alert_channel.name}")
 
         contenido_malicioso = False
 
@@ -205,5 +203,5 @@ async def on_message(message):
         print(f"❌ Error en on_message: {error}")
 
 # === INICIAR EL BOT ===
-print(f"Token leído: {TOKEN[:5]}...")  # No muestres todo por seguridad, solo confirmá que no es None ni vacío
+print(f"Token leído: {TOKEN[:5]}...")
 client.run(TOKEN)
