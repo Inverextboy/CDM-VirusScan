@@ -148,6 +148,7 @@ def extract_urls(text):
 
 @client.event
 async def on_message(message):
+    print("✅ on_message ACTIVADO")  # Esto es el bonus para confirmar que el evento está llegando
     try:
         print(f"📥 Mensaje recibido: {message.content} de {message.author}")
 
