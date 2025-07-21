@@ -7,6 +7,8 @@ from flask import Flask
 from threading import Thread
 from dotenv import load_dotenv
 
+print("INICIO DEL SCRIPT")
+
 # Cargar variables de entorno
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
@@ -16,6 +18,7 @@ ALERT_CHANNEL_ID = int(os.getenv("ALERT_CHANNEL_ID"))
 
 # Configurar el bot
 intents = discord.Intents.all()
+print(f"Intents configurados: {intents}")
 client = discord.Client(intents=intents)
 
 # Servidor Flask para mantener activo en Render
