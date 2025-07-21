@@ -6,6 +6,7 @@ import asyncio
 from flask import Flask
 from threading import Thread
 from dotenv import load_dotenv
+from keep_alive import keep_alive
 
 print("INICIO DEL SCRIPT")
 
@@ -196,6 +197,7 @@ async def on_message(message):
     except Exception as error:
         print(f"❌ Error en on_message: {error}")
 
-# === INICIAR EL BOT ===
-print(f"Token leído: {TOKEN[:5]}...")
-client.run(TOKEN)
+if __name__ == '__main__':
+    keep_alive()
+    print(f"Token leído: {TOKEN[:5]}...")
+    client.run(TOKEN)
