@@ -15,7 +15,7 @@ HYBRID_ANALYSIS_API_KEY = os.getenv("HYBRID_ANALYSIS_API_KEY")
 ALERT_CHANNEL_ID = int(os.getenv("ALERT_CHANNEL_ID"))
 
 # Configurar el bot
-intents = discord.Intents.all()  # Cambiado de default() a all()
+intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 
 # Servidor Flask para mantener activo en Render
@@ -24,11 +24,7 @@ app = Flask(__name__)
 def home():
     return "✅ Bot activo y funcionando."
 
-def run_flask():
-    port = int(os.environ.get("PORT", 3000))
-    app.run(host="0.0.0.0", port=port)
-
-Thread(target=run_flask).start()
+Thread(target=app.run, kwargs={"host": "0.0.0.0", "port": int(os.environ.get("PORT", 3000))}).start()
 
 @client.event
 async def on_ready():
@@ -42,7 +38,6 @@ def scan_file_metadefender(filename, file_bytes):
         url = "https://api.metadefender.com/v4/file"
         headers = {
             "apikey": METADEFENDER_API_KEY,
-            "Content-Type": "application/octet-stream",
             "filename": filename
         }
         response = requests.post(url, headers=headers, data=file_bytes)
@@ -93,11 +88,10 @@ def scan_url_metadefender(url_to_scan):
             "apikey": METADEFENDER_API_KEY,
             "Content-Type": "application/json"
         }
-        json_data = { "url": url_to_scan }
-        response = requests.post(url, headers=headers, json=json_data)
+        response = requests.post(url, headers=headers, json={"url": url_to_scan})
         if response.status_code == 200:
             data = response.json()
-            data_id = data["data_id"]
+            data_id = data.get("data_id")
             result = data.get("scan_results", {}).get("scan_all_result_a", "").lower()
             is_malicious = result == "infected"
             print(f"Resultado MetaDefender URL: {result}")
@@ -106,6 +100,7 @@ def scan_url_metadefender(url_to_scan):
                 "malicious": is_malicious
             }
         print(f"Error MetaDefender URL: {response.status_code}")
+        print(f"Respuesta completa MetaDefender URL: {response.text}")
     except Exception as e:
         print(f"❌ Error en MetaDefender URL: {e}")
     return None
@@ -119,11 +114,7 @@ def scan_url_hybrid_analysis(url_to_scan):
             "User-Agent": "Falcon Sandbox",
             "Content-Type": "application/json"
         }
-        json_data = {
-            "url": url_to_scan,
-            "environment_id": "300"
-        }
-        response = requests.post(url, headers=headers, json=json_data)
+        response = requests.post(url, headers=headers, json={"url": url_to_scan, "environment_id": "300"})
         if response.status_code == 200:
             job_id = response.json().get("job_id")
             print(f"URL enviada a Hybrid Analysis, job_id: {job_id}")
@@ -132,13 +123,13 @@ def scan_url_hybrid_analysis(url_to_scan):
                 "malicious": True
             }
         print(f"Error Hybrid Analysis URL: {response.status_code}")
+        print(f"Respuesta completa Hybrid Analysis URL: {response.text}")
     except Exception as e:
         print(f"❌ Error en HybridAnalysis URL: {e}")
     return None
 
 def extract_urls(text):
-    url_regex = r"https?://[^\s]+"
-    return re.findall(url_regex, text)
+    return re.findall(r"https?://[^\s]+", text)
 
 # === EVENTO PRINCIPAL ===
 
@@ -152,18 +143,17 @@ async def on_message(message):
             return
 
         alert_channel = client.get_channel(ALERT_CHANNEL_ID)
-        if alert_channel is None:
+        if not alert_channel:
             print("❌ No se pudo obtener el canal de alertas.")
             return
-        else:
-            print(f"📢 Canal de alertas encontrado: {alert_channel.name}")
 
         contenido_malicioso = False
 
         # Escaneo de URLs
-        urls = extract_urls(message.content)
-        for url in urls:
+        for url in extract_urls(message.content):
+            url = url.strip("<> \n\r")
             print(f"🌐 Analizando URL: {url}")
+
             result = await asyncio.to_thread(scan_url_metadefender, url)
             if not result:
                 result = await asyncio.to_thread(scan_url_hybrid_analysis, url)
@@ -177,8 +167,9 @@ async def on_message(message):
         # Escaneo de archivos
         for attachment in message.attachments:
             filename = attachment.filename
-            print(f"📁 Analizando archivo: {filename}")
             file_bytes = await attachment.read()
+            print(f"📁 Analizando archivo: {filename}")
+
             result = await asyncio.to_thread(scan_file_metadefender, filename, file_bytes)
             if not result:
                 result = await asyncio.to_thread(scan_file_hybrid_analysis, filename, file_bytes)
